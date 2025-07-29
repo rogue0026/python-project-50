@@ -1,4 +1,5 @@
 import argparse
+import json
 
 
 def run_gendiff():
@@ -10,3 +11,11 @@ def run_gendiff():
     parser.add_argument("second_file")
     parser.parse_args()
 
+
+def parse_file(path_to_file: str) -> str | None:
+    js_file = None
+    try:
+        js_file = json.load(open(path_to_file))
+    except Exception as e:
+        print(e)
+    return js_file
