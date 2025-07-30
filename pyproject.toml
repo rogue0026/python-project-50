@@ -19,4 +19,4 @@ dev = [
 ]
 
 [project.scripts]
-gendiff = "diff_calculator.scripts.gendiff:main"
+gendiff = "diff_calculator.scripts.entry_point:main"
