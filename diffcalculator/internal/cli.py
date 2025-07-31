@@ -1,5 +1,6 @@
-from diff_calculator.internal import diffcalc
 import argparse
+
+from diffcalculator.internal.diffcalc import generate_diff
 
 
 def setup_arg_parser():
@@ -16,5 +17,5 @@ def setup_arg_parser():
 def start_program():
     parser = setup_arg_parser()
     args = parser.parse_args()
-    diff = diffcalc.generate_diff(args.first_file, args.second_file)
+    diff = generate_diff(args.first_file, args.second_file)
     print(diff)
