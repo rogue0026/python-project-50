@@ -1,7 +1,9 @@
 name: Python CI
 
 on:
-  - push
+  push:
+    branches:
+      - main
 
 jobs:
   build:
@@ -28,6 +30,6 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            -Dsonar.projectKey=rogue0026
+            -Dsonar.projectKey=rogue0026_python-project-50
             -Dsonar.organization=Paul_Nozdrachev
             -Dsonar.python.coverage.reportPaths=coverage.xml
