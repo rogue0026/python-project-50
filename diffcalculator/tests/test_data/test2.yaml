@@ -1,0 +1,5 @@
+from: john.doe@domain.com
+to: molly@domain.com
+cc: another.email@domain.com
+subject: Friendly reminder
+content: Dear XYZ, Lorem ipsum dolor sit amet..

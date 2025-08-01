@@ -1,6 +1,7 @@
 import pytest
 
 from diffcalculator.internal.diffcalc import generate_diff
+from diffcalculator.internal.diffcalc import generate_diff_yaml
 
 
 @pytest.fixture
@@ -15,7 +16,17 @@ def non_empty_file2():
 
 @pytest.fixture
 def empty_file():
-    return "./diffcalculator/tests/test_data/file3.json"
+    return "./diffcalculator/tests/test_data/input/empty.json"
+
+
+@pytest.fixture
+def not_empty_yaml1():
+    return "./diffcalculator/tests/test_data/test1.yaml"
+
+
+@pytest.fixture
+def not_empty_yaml2():
+    return "./diffcalculator/tests/test_data/test2.yaml"
 
 
 def test_normal_scenario(non_empty_file1, non_empty_file2):
@@ -40,3 +51,9 @@ def test_empty_and_not_empty(empty_file, non_empty_file1):
     diff = generate_diff(empty_file, non_empty_file1)
     expected = open("./diffcalculator/tests/test_data/file3-1_expected.txt")
     assert diff == expected.read()
+
+
+def test_yaml_normal_work(not_empty_yaml1, not_empty_yaml2):
+    got = generate_diff_yaml(not_empty_yaml1, not_empty_yaml2)
+    expected = open("./diffcalculator/tests/test_data/yaml_expected.txt")
+    assert got == expected.read()

@@ -1,6 +1,6 @@
 import argparse
 
-from diffcalculator.internal.diffcalc import generate_diff
+from diffcalculator.internal.diffcalc import generate_diff, generate_diff_yaml
 
 
 def setup_arg_parser():
@@ -17,5 +17,10 @@ def setup_arg_parser():
 def start_program():
     parser = setup_arg_parser()
     args = parser.parse_args()
-    diff = generate_diff(args.first_file, args.second_file)
-    print(diff)
+    match args.format:
+        case "json":
+            print(generate_diff(args.first_file, args.second_file))
+        case "yaml":
+            print(generate_diff_yaml(args.first_file, args.second_file))
+        case _:
+            print(generate_diff(args.first_file, args.second_file))
