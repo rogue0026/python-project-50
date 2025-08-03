@@ -1,84 +1,95 @@
 import json
-import os
-from secrets import randbelow
-
 import yaml
 
-
-def _get_file_extension(p: str) -> str:
-    _, tail = os.path.split(p)
-    if len(tail) > 0:
-        splitted = tail.split(".")
-        return splitted[len(splitted) - 1]
+import os
 
 
-def read_file(path_to_file: str):
-    extension = _get_file_extension(path_to_file)
-    result = None
-
-    try:
-        match extension:
-            case "yaml":
-                with open(path_to_file) as file:
-                    result = yaml.safe_load(file)
-            case "json":
-                with open(path_to_file) as file:
-                    result = json.load(file)
-    except Exception as e:
-        print(e)
-
-    return result
+def get_file_extension(path_to_file: str) -> str:
+    _, ext = os.path.splitext(path_to_file)
+    return ext[1:]
 
 
-def generate_diff_yaml(path_to_file1: str, path_to_file2: str):
-    yaml1 = None
-    yaml2 = None
-
-    with open(path_to_file1) as f1:
-        yaml1 = yaml.safe_load(f1)
-    with open(path_to_file2) as f2:
-        yaml2 = yaml.safe_load(f2)
-
-    path_to_tmp_file1 = path_to_file1.replace(".yaml", "")
-    path_to_tmp_file1 += f"{randbelow(1000000)}.json"
-    path_to_tmp_file2 = path_to_file2.replace(".yaml", "")
-    path_to_tmp_file2 += f"{randbelow(1000000)}.json"
-
-    with open(path_to_tmp_file1, mode="w") as tmp_file1:
-        tmp_file1.write(json.dumps(yaml1))
-    with open(path_to_tmp_file2, mode="w") as tmp_file2:
-        tmp_file2.write(json.dumps(yaml2))
-    diff = generate_diff(path_to_tmp_file1, path_to_tmp_file2)
-    os.remove(path_to_tmp_file1)
-    os.remove(path_to_tmp_file2)
-    return diff
+def read_file(path_to_file: str) -> dict:
+    file_extension = get_file_extension(path_to_file)
+    file_content = None
+    match file_extension:
+        case "json":
+            with open(path_to_file) as file:
+                file_content = json.load(file)
+        case "yaml":
+            with open(path_to_file) as file:
+                file_content = yaml.safe_load(file)
+        case "yml":
+            with open(path_to_file) as file:
+                file_content = yaml.safe_load(file)
+    if file_content is None:
+        file_content = dict()
+    return file_content
 
 
-def generate_diff(path1: str, path2: str):
-    file1 = read_file(path1)
-    file2 = read_file(path2)
-    s1 = set(file1.items())
-    s2 = set(file2.items())
-    intersection = list(s1.intersection(s2))
-    intersection = [("  " + el[0], el[1]) for el in intersection]
-    s1_diff = [("- " + el[0], el[1]) for el in list(s1 - s2)]
-    s2_diff = [("+ " + el[0], el[1]) for el in list(s2 - s1)]
-
-    aggregated = list()
-    aggregated.extend(intersection)
-    aggregated.extend(s1_diff)
-    aggregated.extend(s2_diff)
-
-    aggregated.sort(key=lambda elem: elem[0][2:])
-    # diff = {k: v for k, v in aggregated}
-    # js = json.dumps(diff, indent=2).replace("\"", "").replace(",", "")
-    return form_output(aggregated)
-
-
-def form_output(lst: list) -> str:
-    result = "{\n"
-    for elem in lst:
+def get_diff(first_path: str, second_path: str):
+    first_file_content = read_file(first_path)
+    second_file_content = read_file(second_path)
+    s1 = set(first_file_content.items())
+    s2 = set(second_file_content.items())
+    files_intersection = [("  " + el[0], el[1]) for el in s1 & s2]
+    first_file_diff = [("- " + el[0], el[1]) for el in list(s1 - s2)]
+    second_file_diff = [("+ " + el[0], el[1]) for el in list(s2 - s1)]
+    agg = list()
+    agg.extend(files_intersection)
+    agg.extend(first_file_diff)
+    agg.extend(second_file_diff)
+    agg.sort(key=lambda item: item[0][2:])
+    diff = dict()
+    for elem in agg:
         k, v = elem
-        result += f"  {k}: {v}\n"
-    result += "}"
+        diff[k] = v
+    output = json.dumps(diff, indent=2)
+    output = output.replace('"', "")
+    output = output.replace(",", "")
+    return output
+
+
+def sort_complex_file(complex_file: dict):
+    first_file_keys = sorted(complex_file.keys(), key=lambda e: e)
+    file_sorted = dict()
+    for current_key in first_file_keys:
+        value = complex_file[current_key]
+        if isinstance(value, dict):
+            file_sorted[current_key] = sort_complex_file(value)
+        else:
+            file_sorted[current_key] = value
+    js = json.dumps(file_sorted)
+    js = js.replace('"', "")
+    js = js.replace(",", "")
+    return js
+
+
+def get_diff_modernized(file1: dict, file2: dict) -> dict:
+    shared_keys = sorted(file1.keys() | file2.keys())
+    result = dict()
+    for key in shared_keys:
+        if key in file1 and key in file2:
+            val_from_file1 = file1[key]
+            val_from_file2 = file2[key]
+            if not isinstance(val_from_file1, dict) and not isinstance(
+                val_from_file2, dict
+            ):
+                if val_from_file1 != val_from_file2:
+                    result[f"- {key}"] = val_from_file1
+                    result[f"+ {key}"] = val_from_file2
+                else:
+                    result[key] = val_from_file1
+            if isinstance(val_from_file1, dict) and isinstance(val_from_file2, dict):
+                result[key] = get_diff_modernized(val_from_file1, val_from_file2)
+            else:
+                result[f"- {key}"] = val_from_file1
+                result[f"+ {key}"] = val_from_file2
+        else:
+            if key in file1 and key not in file2:
+                val_from_file1 = file1[key]
+                result[f"- {key}"] = val_from_file1
+            elif key in file2 and key not in file1:
+                val_from_file2 = file2[key]
+                result[f"+ {key}"] = val_from_file2
     return result
