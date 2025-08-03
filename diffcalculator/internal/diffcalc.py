@@ -50,46 +50,51 @@ def get_diff(first_path: str, second_path: str):
     return output
 
 
-def sort_complex_file(complex_file: dict):
-    first_file_keys = sorted(complex_file.keys(), key=lambda e: e)
-    file_sorted = dict()
-    for current_key in first_file_keys:
-        value = complex_file[current_key]
-        if isinstance(value, dict):
-            file_sorted[current_key] = sort_complex_file(value)
-        else:
-            file_sorted[current_key] = value
-    js = json.dumps(file_sorted)
-    js = js.replace('"', "")
-    js = js.replace(",", "")
-    return js
-
-
-def get_diff_modernized(file1: dict, file2: dict) -> dict:
-    shared_keys = sorted(file1.keys() | file2.keys())
-    result = dict()
-    for key in shared_keys:
-        if key in file1 and key in file2:
-            val_from_file1 = file1[key]
-            val_from_file2 = file2[key]
-            if not isinstance(val_from_file1, dict) and not isinstance(
-                val_from_file2, dict
-            ):
-                if val_from_file1 != val_from_file2:
-                    result[f"- {key}"] = val_from_file1
-                    result[f"+ {key}"] = val_from_file2
-                else:
-                    result[key] = val_from_file1
-            if isinstance(val_from_file1, dict) and isinstance(val_from_file2, dict):
-                result[key] = get_diff_modernized(val_from_file1, val_from_file2)
+def get_diff_v2(file1: dict, file2: dict, depth=None) -> list:
+    if depth is None:
+        depth = 2
+    all_keys = sorted(file1.keys() | file2.keys())
+    result = list()
+    for cur_key in all_keys:
+        if cur_key in file1 and cur_key in file2:
+            val_file1 = file1.get(cur_key)
+            val_file2 = file2.get(cur_key)
+            if isinstance(val_file1, dict) and isinstance(val_file2, dict):
+                result.append(f"{' ' * depth}  {cur_key}: {{")
+                nested_result = get_diff_v2(val_file1, val_file2, depth + 2)
+                result.extend(nested_result)
+                result.append(f"{' ' * (depth - 2)}}}")
+            elif val_file1 == val_file2:
+                result.append(f"{' ' * depth}  {cur_key}: {format_value(val_file1)}")
             else:
-                result[f"- {key}"] = val_from_file1
-                result[f"+ {key}"] = val_from_file2
+                result.append(f"{' ' * depth}- {cur_key}: {format_value(val_file1)}")
+                result.append(f"{' ' * depth}+ {cur_key}: {format_value(val_file2)}")
+        elif cur_key in file1:
+            val_file1 = file1.get(cur_key)
+            result.append(f"{' ' * depth}- {cur_key}: {format_value(val_file1)}")
         else:
-            if key in file1 and key not in file2:
-                val_from_file1 = file1[key]
-                result[f"- {key}"] = val_from_file1
-            elif key in file2 and key not in file1:
-                val_from_file2 = file2[key]
-                result[f"+ {key}"] = val_from_file2
+            val_file2 = file2.get(cur_key)
+            result.append(f"{' ' * depth}+ {cur_key}: {format_value(val_file2)}")
     return result
+
+
+def format_value(value, depth=None) -> str:
+    if depth is None:
+        depth = 2
+    if value is True:
+        return "true"
+    elif value is False:
+        return "false"
+    elif value is None:
+        return "null"
+    elif isinstance(value, dict):
+        result = ["{"]
+        for k, v in sorted(value.items()):
+            if not isinstance(v, dict):
+                result.append(f"{' ' * depth}{k}: {v}")
+            else:
+                result.append(f"{' ' * depth}{k}: {format_value(v, depth + 2)}")
+        result.append(f"{' ' * (depth - 2)}}}")
+        return "\n".join(result)
+    else:
+        return str(value)
