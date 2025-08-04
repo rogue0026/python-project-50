@@ -1,4 +1,4 @@
-from diffcalculator.internal.cli import start_program
+from diffcalc.cli.cli import start_program
 
 
 def main():

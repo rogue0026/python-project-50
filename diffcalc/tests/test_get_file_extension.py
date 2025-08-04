@@ -1,7 +1,6 @@
 import pytest
 
-
-from diffcalculator.internal.diffcalc import get_file_extension
+from diffcalc.internal.tools import get_file_extension
 
 
 @pytest.fixture
