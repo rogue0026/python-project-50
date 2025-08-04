@@ -27,60 +27,9 @@ def read_file(path_to_file: str) -> dict:
     return file_content
 
 
-def get_diff(first_path: str, second_path: str):
-    first_file_content = read_file(first_path)
-    second_file_content = read_file(second_path)
-    s1 = set(first_file_content.items())
-    s2 = set(second_file_content.items())
-    files_intersection = [("  " + el[0], el[1]) for el in s1 & s2]
-    first_file_diff = [("- " + el[0], el[1]) for el in list(s1 - s2)]
-    second_file_diff = [("+ " + el[0], el[1]) for el in list(s2 - s1)]
-    agg = list()
-    agg.extend(files_intersection)
-    agg.extend(first_file_diff)
-    agg.extend(second_file_diff)
-    agg.sort(key=lambda item: item[0][2:])
-    diff = dict()
-    for elem in agg:
-        k, v = elem
-        diff[k] = v
-    output = json.dumps(diff, indent=2)
-    output = output.replace('"', "")
-    output = output.replace(",", "")
-    return output
-
-
-def get_diff_v2(file1: dict, file2: dict, depth=None) -> list:
-    if depth is None:
-        depth = 2
-    all_keys = sorted(file1.keys() | file2.keys())
-    result = list()
-    for cur_key in all_keys:
-        if cur_key in file1 and cur_key in file2:
-            val_file1 = file1.get(cur_key)
-            val_file2 = file2.get(cur_key)
-            if isinstance(val_file1, dict) and isinstance(val_file2, dict):
-                result.append(f"{' ' * depth}  {cur_key}: {{")
-                nested_result = get_diff_v2(val_file1, val_file2, depth + 2)
-                result.extend(nested_result)
-                result.append(f"{' ' * (depth - 2)}}}")
-            elif val_file1 == val_file2:
-                result.append(f"{' ' * depth}  {cur_key}: {format_value(val_file1)}")
-            else:
-                result.append(f"{' ' * depth}- {cur_key}: {format_value(val_file1)}")
-                result.append(f"{' ' * depth}+ {cur_key}: {format_value(val_file2)}")
-        elif cur_key in file1:
-            val_file1 = file1.get(cur_key)
-            result.append(f"{' ' * depth}- {cur_key}: {format_value(val_file1)}")
-        else:
-            val_file2 = file2.get(cur_key)
-            result.append(f"{' ' * depth}+ {cur_key}: {format_value(val_file2)}")
-    return result
-
-
-def format_value(value, depth=None) -> str:
-    if depth is None:
-        depth = 2
+def format_value(value, curly_brace_indent: str, depth=1) -> str:
+    base_indent = "    "
+    computed_indent = base_indent * depth
     if value is True:
         return "true"
     elif value is False:
@@ -89,12 +38,44 @@ def format_value(value, depth=None) -> str:
         return "null"
     elif isinstance(value, dict):
         result = ["{"]
-        for k, v in sorted(value.items()):
-            if not isinstance(v, dict):
-                result.append(f"{' ' * depth}{k}: {v}")
+        for k, v in value.items():
+            if isinstance(v, dict):
+                result.append(f"{computed_indent}{k}: {format_value(v, computed_indent, depth + 1)}")
             else:
-                result.append(f"{' ' * depth}{k}: {format_value(v, depth + 2)}")
-        result.append(f"{' ' * (depth - 2)}}}")
+                result.append(f"{computed_indent}{k}: {v}")
+        result.append(f"{curly_brace_indent}}}")
         return "\n".join(result)
     else:
         return str(value)
+
+
+def stylish(file1: dict, file2: dict) -> str:
+    return "\n".join(["{"] + get_diff(file1, file2) + ["}"])
+
+
+def get_diff(file1: dict, file2: dict, depth=1) -> list:
+    base_indent = "    "
+    computed_indent = base_indent * depth
+    all_keys = sorted(list(file1.keys() | file2.keys()))
+    diff = []
+    for key in all_keys:
+        if key in file1 and key in file2:
+            val_file1 = file1.get(key)
+            val_file2 = file2.get(key)
+            if isinstance(val_file1, dict) and isinstance(val_file2, dict):
+                diff.append(f"{computed_indent}{key}: {{")
+                nest_diff = get_diff(val_file1, val_file2, depth + 1)
+                diff.extend(nest_diff)
+                diff.append(f"{computed_indent}}}")
+            elif val_file1 == val_file2:
+                diff.append(f"{computed_indent}{key}: {format_value(val_file1, computed_indent, depth+1)}")
+            else:
+                diff.append(f"{computed_indent[2:]}- {key}: {format_value(val_file1, computed_indent, depth+1)}")
+                diff.append(f"{computed_indent[2:]}+ {key}: {format_value(val_file2, computed_indent, depth+1)}")
+        elif key in file1:
+            val_file1 = file1.get(key)
+            diff.append(f"{computed_indent[2:]}- {key}: {format_value(val_file1, computed_indent, depth+1)}")
+        else:
+            val_file2 = file2.get(key)
+            diff.append(f"{computed_indent[2:]}+ {key}: {format_value(val_file2, computed_indent, depth+1)}")
+    return diff
