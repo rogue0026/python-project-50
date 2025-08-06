@@ -1,7 +1,6 @@
 import json
-from os import path
-
 import yaml
+from os import path
 
 
 def get_file_extension(path_to_file: str) -> str:

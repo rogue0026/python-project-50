@@ -1,10 +1,7 @@
 import argparse
 
-from diffcalc.internal.diffcalc import generate_string
-from diffcalc.internal.tools import read_file
 
-
-def setup_parser():
+def setup_arg_parser():
     parser = argparse.ArgumentParser(
         description="Compares two configuration files and shows a difference."
     )
@@ -19,7 +16,7 @@ def setup_parser():
 
 
 def start_program():
-    parser = setup_parser()
+    parser = setup_arg_parser()
     args = parser.parse_args()
     generate_diff(args.first_file, args.second_file)
 
