@@ -105,7 +105,6 @@ def stylish(tree: dict, last_indent="") -> list:
                 result.append(f"{current_indent}}}")
             case "unchanged":
                 old_value = get_old(meta_info)
-                formatted_value = None
                 if isinstance(old_value, dict):
                     formatted_value = format_dict(old_value,
                                                   outer_indent=current_indent)
@@ -118,7 +117,6 @@ def stylish(tree: dict, last_indent="") -> list:
             case "updated":
                 old_value = get_old(meta_info)
                 new_value = get_new(meta_info)
-
                 if isinstance(old_value, dict):
                     formatted_old = format_dict(old_value,
                                                 outer_indent=current_indent)
@@ -166,8 +164,8 @@ def stylish(tree: dict, last_indent="") -> list:
     return result
 
 
-# f1 = file_parser.read_file("diffcalc/tests/test_data/file1.json")
-# f2 = file_parser.read_file("diffcalc/tests/test_data/file2.json")
+# f1 = read_file("diffcalc/tests/test_data/file1.json")
+# f2 = read_file("diffcalc/tests/test_data/file2.json")
 f1 = read_file("diffcalc/tests/test_data/complex_file1.json")
 f2 = read_file("diffcalc/tests/test_data/complex_file2.json")
 
