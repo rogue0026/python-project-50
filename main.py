@@ -12,9 +12,9 @@ def format_dict(d: dict, *, outer_indent: str="", sort_keys=True) -> str:
             nested_result = format_dict(v,
                                         outer_indent=outer_indent + inner_indent,
                                         sort_keys=sort_keys)
-            part = f"{outer_indent}{inner_indent}{k}: {{{nested_result}"
+            part = f"{outer_indent}{inner_indent}{k}: {{\n{nested_result}"
             parts.append(part)
-            parts.append(f"{outer_indent}}}")
+            parts.append(f"{outer_indent}{inner_indent}}}")
         else:
             part = f"{outer_indent}{inner_indent}{k}: {format_val(v)}"
             parts.append(part)
@@ -164,10 +164,12 @@ def stylish(tree: dict, last_indent="") -> list:
     return result
 
 
-# f1 = read_file("diffcalc/tests/test_data/file1.json")
-# f2 = read_file("diffcalc/tests/test_data/file2.json")
 f1 = read_file("diffcalc/tests/test_data/complex_file1.json")
 f2 = read_file("diffcalc/tests/test_data/complex_file2.json")
 
 diff = build_diff(f1, f2)
-print("\n".join(["{"] + stylish(diff) + ["}"]))
+got = "\n".join(["{"] + stylish(diff) + ["}"])
+with open("diffcalc/tests/test_data/complex_diff.txt") as file:
+    expected = file.read()
+    assert expected == got
+
