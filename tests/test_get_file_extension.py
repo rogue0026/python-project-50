@@ -1,6 +1,6 @@
 import pytest
 
-from gendiff.parser.file_parser import get_file_extension
+from gendiff.parser import get_file_extension
 
 
 @pytest.fixture

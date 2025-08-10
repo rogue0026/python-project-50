@@ -1,5 +1,5 @@
-from gendiff.internal import diffcalc
-from gendiff.parser.file_parser import read_file
+from gendiff import diff
+from gendiff.parser import read_file
 
 
 def format_dict(d: dict, *, out_indent: str = "", sort_keys=True) -> str:
@@ -37,7 +37,7 @@ def formatter(tree: dict, last_indent="") -> list:
     cur_indent = "    " + last_indent
     result = list()
     for key, meta_info in sorted(tree.items()):
-        state = diffcalc.get_key_state(meta_info)
+        state = diff.get_key_state(meta_info)
         match state:
             case "nested":
                 handle_nested(key, meta_info, result, cur_indent)
@@ -53,7 +53,7 @@ def formatter(tree: dict, last_indent="") -> list:
 
 
 def handle_unchanged(key, meta_info, result: list, cur_indent):
-    old_value = diffcalc.get_old(meta_info)
+    old_value = diff.get_old(meta_info)
     if isinstance(old_value, dict):
         formatted_value = format_dict(old_value,
                                       out_indent=cur_indent)
@@ -66,7 +66,7 @@ def handle_unchanged(key, meta_info, result: list, cur_indent):
 
 
 def handle_nested(key, meta_info, result: list, cur_indent):
-    children = diffcalc.get_children(meta_info)
+    children = diff.get_children(meta_info)
     result.append(f"{cur_indent}{key}: {{")
     inner = formatter(children, last_indent=cur_indent)
     result.extend(inner)
@@ -74,8 +74,8 @@ def handle_nested(key, meta_info, result: list, cur_indent):
 
 
 def handle_updated(key, meta_info, result: list, cur_indent):
-    old_value = diffcalc.get_old(meta_info)
-    new_value = diffcalc.get_new(meta_info)
+    old_value = diff.get_old(meta_info)
+    new_value = diff.get_new(meta_info)
     if isinstance(old_value, dict):
         formatted_old = format_dict(old_value,
                                     out_indent=cur_indent)
@@ -98,7 +98,7 @@ def handle_updated(key, meta_info, result: list, cur_indent):
 
 
 def handle_removed(key, meta_info, result: list, cur_indent):
-    old_value = diffcalc.get_old(meta_info)
+    old_value = diff.get_old(meta_info)
     if isinstance(old_value, dict):
         formatted = format_dict(old_value,
                                 out_indent=cur_indent)
@@ -112,7 +112,7 @@ def handle_removed(key, meta_info, result: list, cur_indent):
 
 
 def handle_added(key, meta_info, result: list, cur_indent):
-    new_value = diffcalc.get_new(meta_info)
+    new_value = diff.get_new(meta_info)
     if isinstance(new_value, dict):
         formatted = format_dict(new_value,
                                 out_indent=cur_indent)
@@ -128,6 +128,6 @@ def handle_added(key, meta_info, result: list, cur_indent):
 def stylish(file_path1: str, file_path2: str) -> str:
     file1 = read_file(file_path1)
     file2 = read_file(file_path2)
-    diff_tree = diffcalc.build_diff(file1, file2)
+    diff_tree = diff.build_diff(file1, file2)
     formatted_diff = formatter(diff_tree)
     return "\n".join(["{"] + formatted_diff + ["}"])

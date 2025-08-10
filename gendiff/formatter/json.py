@@ -1,7 +1,7 @@
 import json
 
-from gendiff.internal import diffcalc
-from gendiff.parser.file_parser import read_file
+from gendiff import diff
+from gendiff.parser import read_file
 
 
 def json_formatter(path1: str, path2: str) -> str:
