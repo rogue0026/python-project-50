@@ -18,7 +18,7 @@ def format_val(val) -> str:
 
 
 def walk_tree(diff_tree: dict, prop_name="") -> list:
-    result = list()
+    result = []
     for key, meta in sorted(diff_tree.items()):
         cur_prop = key
         if len(prop_name) > 0:

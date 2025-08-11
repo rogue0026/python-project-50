@@ -23,5 +23,5 @@ def read_file(path_to_file: str) -> dict:
             with open(path_to_file) as file:
                 file_content = yaml.safe_load(file)
     if file_content is None:
-        file_content = dict()
+        file_content = {}
     return file_content

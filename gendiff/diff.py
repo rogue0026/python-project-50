@@ -14,8 +14,6 @@ def build_meta(key_state, old_val, new_val, children) -> dict:
 
 def get_key_state(meta: dict) -> str:
     state = meta.get("key_state")
-    if state is None:
-        raise Exception("key state not found")
     return state
 
 
@@ -36,7 +34,7 @@ def get_children(meta: dict) -> dict:
 
 def walk_files(file1: dict, file2: dict) -> dict:
     all_keys = sorted(file1.keys() | file2.keys())
-    diff_tree = dict()
+    diff_tree = {}
     for key in all_keys:
         if key in file1 and key in file2:
             val1 = file1.get(key)

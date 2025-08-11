@@ -24,7 +24,7 @@ def format_val(val, out_indent: str) -> str:
 def stylish(diff_tree: dict, last_indent="") -> str:
     base_indent = " " * 4
     sign_indent = " " * 2
-    strings = list()
+    strings = []
     strings.append("{")
     for key, meta_info in sorted(diff_tree.items()):
         key_state = diff.get_key_state(meta_info)

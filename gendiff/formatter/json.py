@@ -9,7 +9,7 @@ def json_formatter(diff_tree: dict) -> str:
 
 
 def walk_tree(diff_tree: dict) -> dict:
-    result = dict()
+    result = {}
     for key, meta_info in diff_tree.items():
         state = diff.get_key_state(meta_info)
         match state:
