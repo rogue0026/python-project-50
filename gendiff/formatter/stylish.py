@@ -49,7 +49,7 @@ def stylish(diff_tree: dict, last_indent="") -> str:
                 old_val = format_val(old_val, last_indent + base_indent)
                 old_s = f"{last_indent}{sign_indent}- {key}: {old_val}"
                 new_val = diff.get_new(meta_info)
-                new_val = format_val(new_val, base_indent)
+                new_val = format_val(new_val, last_indent + base_indent)
                 new_s = f"{last_indent}{sign_indent}+ {key}: {new_val}"
                 strings.append(old_s)
                 strings.append(new_s)
