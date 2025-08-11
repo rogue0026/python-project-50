@@ -1,5 +1,5 @@
+
 from gendiff import diff
-from gendiff.parser import read_file
 
 
 def format_val(val) -> str:
@@ -9,10 +9,12 @@ def format_val(val) -> str:
         return "false"
     elif val is None:
         return "null"
+    elif isinstance(val, str):
+        return f"'{val}'"
     elif isinstance(val, dict):
         return "[complex value]"
     else:
-        return f"'{str(val)}'"
+        return val
 
 
 def walk_tree(diff_tree: dict, prop_name="") -> list:
@@ -45,9 +47,6 @@ def walk_tree(diff_tree: dict, prop_name="") -> list:
     return result
 
 
-def plain(path1: str, path2: str) -> str:
-    file1 = read_file(path1)
-    file2 = read_file(path2)
-    diff_tree = diff.build_diff(file1, file2)
+def plain(diff_tree: dict) -> str:
     result = walk_tree(diff_tree)
     return "\n".join(result)

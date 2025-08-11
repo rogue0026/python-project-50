@@ -1,13 +1,9 @@
 import json
 
 from gendiff import diff
-from gendiff.parser import read_file
 
 
-def json_formatter(path1: str, path2: str) -> str:
-    file1 = read_file(path1)
-    file2 = read_file(path2)
-    diff_tree = diff.build_diff(file1, file2)
+def json_formatter(diff_tree: dict) -> str:
     result = walk_tree(diff_tree)
     return json.dumps(result, indent=4)
 

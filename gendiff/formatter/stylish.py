@@ -1,5 +1,6 @@
+
+
 from gendiff import diff
-from gendiff.parser import read_file
 
 
 def format_dict(d: dict, *, out_indent: str = "", sort_keys=True) -> str:
@@ -33,10 +34,10 @@ def format_val(val) -> str:
         return str(val)
 
 
-def formatter(tree: dict, last_indent="") -> list:
+def formatter(diff_tree: dict, last_indent="") -> list:
     cur_indent = "    " + last_indent
     result = list()
-    for key, meta_info in sorted(tree.items()):
+    for key, meta_info in sorted(diff_tree.items()):
         state = diff.get_key_state(meta_info)
         match state:
             case "nested":
@@ -125,9 +126,6 @@ def handle_added(key, meta_info, result: list, cur_indent):
         result.append(formatted)
 
 
-def stylish(file_path1: str, file_path2: str) -> str:
-    file1 = read_file(file_path1)
-    file2 = read_file(file_path2)
-    diff_tree = diff.build_diff(file1, file2)
+def stylish(diff_tree: dict) -> str:
     formatted_diff = formatter(diff_tree)
     return "\n".join(["{"] + formatted_diff + ["}"])

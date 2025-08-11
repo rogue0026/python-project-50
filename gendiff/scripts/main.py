@@ -1,6 +1,6 @@
 import argparse
 
-from gendiff.formatter import json, plain, stylish
+from gendiff import generate_diff
 
 
 def main():
@@ -15,16 +15,8 @@ def main():
     parser.add_argument("first_file")
     parser.add_argument("second_file")
     args = parser.parse_args()
-    match args.format:
-        case "stylish":
-            styled_diff = stylish.stylish(args.first_file, args.second_file)
-            print(styled_diff)
-        case "plain":
-            plain_diff = plain.plain(args.first_file, args.second_file)
-            print(plain_diff)
-        case "json":
-            json_diff = json.json_formatter(args.first_file, args.second_file)
-            print(json_diff)
+    result = generate_diff(args.first_file, args.second_file, args.format)
+    print(result)
 
 
 if __name__ == "__main__":

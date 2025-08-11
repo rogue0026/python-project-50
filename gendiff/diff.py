@@ -1,3 +1,8 @@
+from gendiff.formatter import json, plain, stylish
+
+from .parser import read_file
+
+
 def build_meta(key_state, old_val, new_val, children) -> dict:
     return {
         "key_state": key_state,
@@ -29,7 +34,7 @@ def get_children(meta: dict) -> dict:
     return children
 
 
-def build_diff(file1: dict, file2: dict) -> dict:
+def walk_files(file1: dict, file2: dict) -> dict:
     all_keys = sorted(file1.keys() | file2.keys())
     diff_tree = dict()
     for key in all_keys:
@@ -37,7 +42,7 @@ def build_diff(file1: dict, file2: dict) -> dict:
             val1 = file1.get(key)
             val2 = file2.get(key)
             if isinstance(val1, dict) and isinstance(val2, dict):
-                inner_result = build_diff(val1, val2)
+                inner_result = walk_files(val1, val2)
                 key_meta_info = build_meta("nested", None, None, inner_result)
                 diff_tree[key] = key_meta_info
             elif val1 == val2:
@@ -55,3 +60,18 @@ def build_diff(file1: dict, file2: dict) -> dict:
             key_meta_info = build_meta("added", None, val2, None)
             diff_tree[key] = key_meta_info
     return diff_tree
+
+
+def generate_diff(file_path1: str, file_path2: str, format="stylish") -> str:
+    file1 = read_file(file_path1)
+    file2 = read_file(file_path2)
+    diff_tree = walk_files(file1, file2)
+    result = ""
+    match format:
+        case "stylish":
+            result = stylish.stylish(diff_tree)
+        case "plain":
+            result = plain.plain(diff_tree)
+        case "json":
+            result = json.json_formatter(diff_tree)
+    return result
