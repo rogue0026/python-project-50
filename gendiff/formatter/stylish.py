@@ -1,131 +1,62 @@
-
-
 from gendiff import diff
 
 
-def format_dict(d: dict, *, out_indent: str = "", sort_keys=True) -> str:
-    in_indent = " " * 4
-    parts = []
-    items = d.items()
-    if sort_keys:
-        items = sorted(items)
-    for k, v in items:
-        if isinstance(v, dict):
-            nested_result = format_dict(v,
-                                        out_indent=out_indent + in_indent,
-                                        sort_keys=sort_keys)
-            part = f"{out_indent}{in_indent}{k}: {{\n{nested_result}"
-            parts.append(part)
-            parts.append(f"{out_indent}{in_indent}}}")
-        else:
-            part = f"{out_indent}{in_indent}{k}: {format_val(v)}"
-            parts.append(part)
-    return "\n".join(parts)
-
-
-def format_val(val) -> str:
+def format_val(val, out_indent: str) -> str:
     if val is True:
         return "true"
     elif val is False:
         return "false"
     elif val is None:
         return "null"
+    elif isinstance(val, dict):
+        base_indent = " " * 4
+        inner_indent = out_indent + base_indent
+        dict_strings = ["{"]
+        for key, value in sorted(val.items()):
+            s = f"{inner_indent}{key}: {format_val(value, inner_indent)}"
+            dict_strings.append(s)
+        dict_strings.append(f"{out_indent}}}")
+        return "\n".join(dict_strings)
     else:
         return str(val)
 
 
-def formatter(diff_tree: dict, last_indent="") -> list:
-    cur_indent = "    " + last_indent
-    result = list()
+def stylish(diff_tree: dict, last_indent="") -> str:
+    base_indent = " " * 4
+    sign_indent = " " * 2
+    strings = list()
+    strings.append("{")
     for key, meta_info in sorted(diff_tree.items()):
-        state = diff.get_key_state(meta_info)
-        match state:
-            case "nested":
-                handle_nested(key, meta_info, result, cur_indent)
-            case "unchanged":
-                handle_unchanged(key, meta_info, result, cur_indent)
-            case "updated":
-                handle_updated(key, meta_info, result, cur_indent)
-            case "removed":
-                handle_removed(key, meta_info, result, cur_indent)
+        key_state = diff.get_key_state(meta_info)
+        match key_state:
             case "added":
-                handle_added(key, meta_info, result, cur_indent)
-    return result
-
-
-def handle_unchanged(key, meta_info, result: list, cur_indent):
-    old_value = diff.get_old(meta_info)
-    if isinstance(old_value, dict):
-        formatted_value = format_dict(old_value,
-                                      out_indent=cur_indent)
-        result.append(f"{cur_indent}{key}: {{")
-        result.append(formatted_value)
-        result.append(f"{cur_indent}}}")
-    else:
-        formatted_value = format_val(old_value)
-        result.append(f"{cur_indent}{key}: {formatted_value}")
-
-
-def handle_nested(key, meta_info, result: list, cur_indent):
-    children = diff.get_children(meta_info)
-    result.append(f"{cur_indent}{key}: {{")
-    inner = formatter(children, last_indent=cur_indent)
-    result.extend(inner)
-    result.append(f"{cur_indent}}}")
-
-
-def handle_updated(key, meta_info, result: list, cur_indent):
-    old_value = diff.get_old(meta_info)
-    new_value = diff.get_new(meta_info)
-    if isinstance(old_value, dict):
-        formatted_old = format_dict(old_value,
-                                    out_indent=cur_indent)
-        result.append(f"{cur_indent[2:]}- {key}: {{")
-        result.append(formatted_old)
-        result.append(f"{cur_indent}}}")
-    else:
-        formatted_old = format_val(old_value)
-        result.append(f"{cur_indent[2:]}- {key}: {formatted_old}")
-
-    if isinstance(new_value, dict):
-        formatted_new = format_dict(new_value,
-                                    out_indent=cur_indent)
-        result.append(f"{cur_indent[2:]}+ {key}: {{")
-        result.append(formatted_new)
-        result.append(f"{cur_indent}}}")
-    else:
-        formatted_new = format_val(new_value)
-        result.append(f"{cur_indent[2:]}+ {key}: {formatted_new}")
-
-
-def handle_removed(key, meta_info, result: list, cur_indent):
-    old_value = diff.get_old(meta_info)
-    if isinstance(old_value, dict):
-        formatted = format_dict(old_value,
-                                out_indent=cur_indent)
-        result.append(f"{cur_indent[2:]}- {key}: {{")
-        result.append(formatted)
-        result.append(f"{cur_indent}}}")
-    else:
-        formatted = format_val(old_value)
-        formatted = f"{cur_indent[2:]}- {key}: {formatted}"
-        result.append(formatted)
-
-
-def handle_added(key, meta_info, result: list, cur_indent):
-    new_value = diff.get_new(meta_info)
-    if isinstance(new_value, dict):
-        formatted = format_dict(new_value,
-                                out_indent=cur_indent)
-        result.append(f"{cur_indent[2:]}+ {key}: {{")
-        result.append(formatted)
-        result.append(f"{cur_indent}}}")
-    else:
-        formatted = format_val(new_value)
-        formatted = f"{cur_indent[2:]}+ {key}: {formatted}"
-        result.append(formatted)
-
-
-def stylish(diff_tree: dict) -> str:
-    formatted_diff = formatter(diff_tree)
-    return "\n".join(["{"] + formatted_diff + ["}"])
+                new_val = diff.get_new(meta_info)
+                new_val = format_val(new_val, last_indent + base_indent)
+                s = f"{last_indent}{sign_indent}+ {key}: {new_val}"
+                strings.append(s)
+            case "removed":
+                old_val = diff.get_old(meta_info)
+                old_val = format_val(old_val, last_indent + base_indent)
+                s = f"{last_indent}{sign_indent}- {key}: {old_val}"
+                strings.append(s)
+            case "unchanged":
+                old_val = diff.get_old(meta_info)
+                old_val = format_val(old_val, last_indent + base_indent)
+                s = f"{last_indent}{base_indent}{key}: {old_val}"
+                strings.append(s)
+            case "updated":
+                old_val = diff.get_old(meta_info)
+                old_val = format_val(old_val, last_indent + base_indent)
+                old_s = f"{last_indent}{sign_indent}- {key}: {old_val}"
+                new_val = diff.get_new(meta_info)
+                new_val = format_val(new_val, base_indent)
+                new_s = f"{last_indent}{sign_indent}+ {key}: {new_val}"
+                strings.append(old_s)
+                strings.append(new_s)
+            case "nested":
+                children = diff.get_children(meta_info)
+                inner_diff = stylish(children, last_indent + base_indent)
+                s = f"{last_indent}{base_indent}{key}: {inner_diff}"
+                strings.append(s)
+    strings.append(f"{last_indent}}}")
+    return "\n".join(strings)
