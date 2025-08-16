@@ -1,6 +1,5 @@
 from gendiff import diff
 
-
 SIGN_INDENT = " " * 2
 BASE_INDENT = " " * 4
 
