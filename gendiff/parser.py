@@ -16,10 +16,7 @@ def read_file(path_to_file: str) -> dict:
         case "json":
             with open(path_to_file) as file:
                 file_content = json.load(file)
-        case "yaml":
-            with open(path_to_file) as file:
-                file_content = yaml.safe_load(file)
-        case "yml":
+        case "yaml" | "yml":
             with open(path_to_file) as file:
                 file_content = yaml.safe_load(file)
     if file_content is None:

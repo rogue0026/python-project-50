@@ -1,8 +1,32 @@
 {
-    "-follow": false,
-    "host": "hexlet.io",
-    "-proxy": "123.234.53.22",
-    "-timeout": 50,
-    "+timeout": 20,
-    "+verbose": true
+    "follow": {
+        "key_state": "removed",
+        "old_val": false,
+        "new_val": null,
+        "children": null
+    },
+    "host": {
+        "key_state": "unchanged",
+        "old_val": "hexlet.io",
+        "new_val": "hexlet.io",
+        "children": null
+    },
+    "proxy": {
+        "key_state": "removed",
+        "old_val": "123.234.53.22",
+        "new_val": null,
+        "children": null
+    },
+    "timeout": {
+        "key_state": "updated",
+        "old_val": 50,
+        "new_val": 20,
+        "children": null
+    },
+    "verbose": {
+        "key_state": "added",
+        "old_val": null,
+        "new_val": true,
+        "children": null
+    }
 }
